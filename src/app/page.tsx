@@ -112,7 +112,8 @@ export default function Home() {
     )
   }
 
-  if (!hasConfig) {
+  // BYPASS SUPABASE CHECK — Skip setup screen and show dashboard with empty data
+  if (!hasConfig && false) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="max-w-xl rounded-[14px] border border-white/[0.07] bg-[#16181d] p-6 text-center">
