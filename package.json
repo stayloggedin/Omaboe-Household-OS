@@ -2,16 +2,23 @@
   "name": "household-os",
   "version": "1.0.0",
   "private": true,
+<<<<<<< HEAD
   "engines": {
     "node": ">=20 <21"
   },
+=======
+>>>>>>> 16218207cc942180a28cf33831a9daa74a206f28
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+<<<<<<< HEAD
     "lint": "next lint --no-cache",
     "typecheck": "tsc --noEmit",
     "ci:check": "npm run lint && npm run typecheck && npm run build"
+=======
+    "lint": "next lint"
+>>>>>>> 16218207cc942180a28cf33831a9daa74a206f28
   },
   "dependencies": {
     "next": "14.2.3",

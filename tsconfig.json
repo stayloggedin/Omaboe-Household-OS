@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
+<<<<<<< HEAD
     "baseUrl": ".",
+=======
+>>>>>>> 16218207cc942180a28cf33831a9daa74a206f28
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,

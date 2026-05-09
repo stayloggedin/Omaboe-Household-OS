@@ -48,6 +48,7 @@ vercel --prod
 2. Share with all household members — they can open it on any device
 3. Everyone sees the same data, updated live
 
+<<<<<<< HEAD
 ### Optional — Auto-deploy with GitHub Actions
 
 If you want every push to `main` to deploy automatically, this repo includes:
@@ -72,6 +73,8 @@ Once secrets are set, push to `main` (or run the workflow manually from the Acti
 
 PRs to `main` also run `npm ci`, `npm run lint`, `npm run typecheck`, and `npm run build` automatically, so issues are caught before merge.
 
+=======
+>>>>>>> 16218207cc942180a28cf33831a9daa74a206f28
 ---
 
 ## 🗂 Project structure
