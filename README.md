@@ -85,6 +85,8 @@ Deploy uses a **Dockerfile** at the repo root (single-stage `npm run build` + `n
 
 If a build still fails, open the deployment → **Build** → **View logs** and copy the **first error** (not the summary card). The card only says “Failed to build an image”.
 
+**Common causes after JSON is fixed:** Docker Hub **rate limits** when pulling `node` (the `Dockerfile` uses **AWS Public ECR** mirror to reduce that), or **`npm run build`** / TypeScript errors (CI still runs `npm run typecheck` in PRs).
+
 ---
 
 ## 🗂 Project structure

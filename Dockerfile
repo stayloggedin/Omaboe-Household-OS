@@ -1,8 +1,8 @@
-# Railway often sets NODE_ENV=production during `docker build`. That makes
-# `npm install` skip devDependencies, and `next build` then fails (no TypeScript,
-# Tailwind, postcss, eslint-config-next, etc.).
+# Railway often sets NODE_ENV=production during `docker build`, which skips
+# devDependencies and breaks `next build`. Force development until after build.
 
-FROM node:20-bookworm-slim
+# Use AWS Public ECR mirror of official Node image (avoids Docker Hub rate limits on CI).
+FROM public.ecr.aws/docker/library/node:20-bookworm-slim
 
 WORKDIR /app
 
@@ -18,8 +18,7 @@ COPY package.json ./
 RUN npm install --no-audit --no-fund
 
 COPY . .
-RUN npm run build \
-  && npm prune --omit=dev
+RUN npm run build
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
