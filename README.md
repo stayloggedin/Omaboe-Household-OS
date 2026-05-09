@@ -74,16 +74,16 @@ PRs to `main` also run `npm ci`, `npm run lint`, `npm run typecheck`, and `npm r
 
 ### Railway
 
-Deploy uses a **Dockerfile** + Next.js **`output: 'standalone'`** so the image builds reliably (avoids Railpack/Nixpacks guessing wrong install/build steps).
+Deploy uses a **Dockerfile** at the repo root (single-stage `npm run build` + `next start`). Railway auto-detects it.
 
-1. In [Railway](https://railway.app), **New Project** → deploy from GitHub (repo root must contain `package.json` and `Dockerfile`).
+1. In [Railway](https://railway.app), **New Project** → deploy from GitHub. **Root Directory** must be empty (or `.`) so `Dockerfile` and `package.json` are found.
 2. **Variables** → add:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_HOUSEHOLD_NAME` (optional)
-3. Redeploy. The container listens on **`PORT`** (Railway sets this automatically).
+3. Redeploy. The start command uses Railway’s **`PORT`**.
 
-If a build still fails, open the deployment → **Build** tab and copy the first red error lines (not only the summary card).
+If a build still fails, open the deployment → **Build** → **View logs** and copy the **first error** (not the summary card). The card only says “Failed to build an image”.
 
 ---
 

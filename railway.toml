@@ -1,9 +1,5 @@
-# Railway picks up Dockerfile automatically when builder is DOCKERFILE.
-# https://docs.railway.com/reference/config-as-code
-
-[build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+# Dockerfile in repo root is auto-detected; only deploy hints here.
+# https://docs.railway.com/deploy/dockerfiles
 
 [deploy]
 healthcheckPath = "/"

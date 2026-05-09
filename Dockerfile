@@ -1,35 +1,27 @@
-# Production image for Railway / Docker.
-# Next.js "standalone" output - see next.config.js.
+# Single-stage image: avoids standalone COPY issues on some hosts.
+# Railway sets PORT at runtime; Next must bind 0.0.0.0.
 
-FROM node:20-bookworm-slim AS base
+FROM node:20-bookworm-slim
+
 WORKDIR /app
 
-FROM base AS deps
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package.json ./
 RUN npm install --no-audit --no-fund
 
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-# Avoid OOM on small build runners
-ENV NODE_OPTIONS=--max-old-space-size=4096
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
-FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-
-RUN groupadd --system --gid 1001 nodejs \
-  && useradd --system --uid 1001 --gid nodejs nextjs
-
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-EXPOSE 3000
-ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-CMD ["node", "server.js"]
+EXPOSE 3000
+
+# shell form so Railway's PORT is expanded at container start
+CMD ["sh", "-c", "exec npx next start -H 0.0.0.0 -p ${PORT:-3000}"]
