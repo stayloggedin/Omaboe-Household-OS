@@ -74,7 +74,7 @@ PRs to `main` also run `npm ci`, `npm run lint`, `npm run typecheck`, and `npm r
 
 ### Railway
 
-Deploy uses a **Dockerfile** at the repo root (single-stage `npm run build` + `next start`). Railway auto-detects it. The Dockerfile forces **`NODE_ENV=development`** during install/build so **devDependencies** (TypeScript, Tailwind, etc.) are not skipped — Railway often sets `NODE_ENV=production` during image build, which breaks `next build` if you do not override it.
+Deploy uses a **Dockerfile** at the repo root (single-stage `npm run build` + `next start`). Railway auto-detects it. The Dockerfile uses **`npm install --include=dev`** so **devDependencies** install even when Railway sets `NODE_ENV=production`. **`next build` must run with `NODE_ENV=production`** (do not use `development` during the build step or prerender errors like `Html` / `useContext` can occur).
 
 1. In [Railway](https://railway.app), **New Project** → deploy from GitHub. **Root Directory** must be empty (or `.`) so `Dockerfile` and `package.json` are found.
 2. **Variables** → add:
