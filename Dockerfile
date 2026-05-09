@@ -1,28 +1,27 @@
-# Production image for Railway (and any Docker host).
-# Uses Next.js "standalone" output — see next.config.js.
+# Production image for Railway / Docker.
+# Next.js "standalone" output - see next.config.js.
 
-FROM node:20-alpine AS base
+FROM node:20-bookworm-slim AS base
+WORKDIR /app
 
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
 COPY package.json ./
-RUN npm install
+RUN npm install --no-audit --no-fund
 
 FROM base AS builder
-WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Avoid OOM on small build runners
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
 FROM base AS runner
-WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs \
+  && useradd --system --uid 1001 --gid nodejs nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
