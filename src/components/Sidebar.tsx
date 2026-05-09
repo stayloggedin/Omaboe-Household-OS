@@ -10,6 +10,8 @@ interface Props {
   members: Member[]
   alertCount: number
   maintenanceCount: number
+  /** From runtime env via /api/public-env; falls back to NEXT_PUBLIC_* or default. */
+  householdLabel?: string
 }
 
 const NAV = [
@@ -22,7 +24,7 @@ const NAV = [
   { id: 'health',      label: 'Home health',   icon: HeartIcon },
 ] as const
 
-export default function Sidebar({ current, onChange, members, alertCount, maintenanceCount }: Props) {
+export default function Sidebar({ current, onChange, members, alertCount, maintenanceCount, householdLabel }: Props) {
   return (
     <aside className="flex flex-col bg-[var(--surface)] border-r border-white/[0.07] h-screen sticky top-0">
       {/* Logo */}
@@ -31,7 +33,7 @@ export default function Sidebar({ current, onChange, members, alertCount, mainte
           House<span className="text-[var(--accent)]">OS</span>
         </div>
         <div className="text-[11px] text-[var(--muted)] font-mono tracking-[0.05em] mt-0.5">
-          {process.env.NEXT_PUBLIC_HOUSEHOLD_NAME || 'Shared household'} · Live
+          {householdLabel?.trim() || process.env.NEXT_PUBLIC_HOUSEHOLD_NAME || 'Shared household'} · Live
         </div>
       </div>
 

@@ -1,22 +1,26 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const initialUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const initialKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey)
+/** True after build-time env and/or `rebindSupabaseClient` (runtime Railway env). */
+export let isSupabaseConfigured = Boolean(initialUrl && initialKey)
 
-if (!isSupabaseConfigured) {
-  // Keep builds from crashing when env vars are not set yet.
-  // The UI will surface setup guidance instead of failing at build-time.
-  console.warn(
-    'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. App will run in setup mode until configured.'
-  )
+export let supabase: SupabaseClient = createClient(
+  initialUrl || 'https://placeholder.supabase.co',
+  initialKey || 'placeholder-anon-key'
+)
+
+export function rebindSupabaseClient(url: string, anonKey: string): void {
+  supabase = createClient(url, anonKey)
+  isSupabaseConfigured = true
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseKey || 'placeholder-anon-key'
-)
+if (!initialUrl || !initialKey) {
+  console.warn(
+    'NEXT_PUBLIC_SUPABASE_* not set at build time; client loads config from /api/public-env at runtime.'
+  )
+}
 
 // Types
 export type Module = 'utilities' | 'vehicles' | 'finances' | 'maintenance' | 'health'

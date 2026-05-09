@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { supabase, isSupabaseConfigured, type Entry, type Member, type Alert, type Module } from '@/lib/supabase'
+import { supabase, rebindSupabaseClient, type Entry, type Member, type Alert, type Module } from '@/lib/supabase'
 import Sidebar, { type NavPage } from '@/components/Sidebar'
 import AddEntryModal from '@/components/AddEntryModal'
 import ShareModal from '@/components/ShareModal'
@@ -25,7 +25,10 @@ export default function Home() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [members, setMembers] = useState<Member[]>([])
   const [alerts, setAlerts]   = useState<Alert[]>([])
+  const [booted, setBooted]   = useState(false)
+  const [hasConfig, setHasConfig] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [householdLabel, setHouseholdLabel] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [memberName]          = useState(() =>
@@ -33,11 +36,6 @@ export default function Home() {
   )
 
   const fetchAll = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setLoading(false)
-      return
-    }
-
     const [{ data: e }, { data: m }, { data: a }] = await Promise.all([
       supabase.from('entries').select('*').order('created_at', { ascending: false }),
       supabase.from('members').select('*').order('created_at'),
@@ -46,34 +44,64 @@ export default function Home() {
     if (e) setEntries(e as Entry[])
     if (m) setMembers(m as Member[])
     if (a) setAlerts(a as Alert[])
-    setLoading(false)
+  }, [])
+
+  // Load Supabase URL/key from server runtime env (Railway) — not only from the JS bundle.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch('/api/public-env')
+        const j = await r.json()
+        if (cancelled) return
+        if (j.configured && j.url && j.anonKey) {
+          rebindSupabaseClient(j.url, j.anonKey)
+          setHouseholdLabel(typeof j.householdName === 'string' ? j.householdName : '')
+          setHasConfig(true)
+        } else {
+          setHasConfig(false)
+          setLoading(false)
+        }
+      } catch {
+        if (!cancelled) {
+          setHasConfig(false)
+          setLoading(false)
+        }
+      } finally {
+        if (!cancelled) setBooted(true)
+      }
+    })()
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setLoading(false)
-      return
-    }
+    if (!booted || !hasConfig) return
 
-    fetchAll()
+    let cancelled = false
+    ;(async () => {
+      await fetchAll()
+      if (!cancelled) setLoading(false)
+    })()
 
-    // Realtime subscriptions
     const chan = supabase
       .channel('household-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, fetchAll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, fetchAll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, fetchAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'entries' }, () => { void fetchAll() })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => { void fetchAll() })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, () => { void fetchAll() })
       .subscribe()
 
-    return () => { supabase.removeChannel(chan) }
-  }, [fetchAll])
+    return () => {
+      cancelled = true
+      supabase.removeChannel(chan)
+    }
+  }, [booted, hasConfig, fetchAll])
 
   const alertCount       = alerts.filter(a => !a.resolved && a.module === 'vehicles').length
   const maintenanceCount = entries.filter(e => e.module === 'maintenance' && (e.status === 'overdue' || e.status === 'due_soon')).length
 
   const moduleEntries = (m: Module) => entries.filter(e => e.module === m)
 
-  if (loading) {
+  if (!booted || (hasConfig && loading)) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -84,7 +112,7 @@ export default function Home() {
     )
   }
 
-  if (!isSupabaseConfigured) {
+  if (!hasConfig) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6">
         <div className="max-w-xl rounded-[14px] border border-white/[0.07] bg-[#16181d] p-6 text-center">
@@ -92,8 +120,9 @@ export default function Home() {
             House<span style={{ color: 'var(--accent)' }}>OS</span> setup required
           </h1>
           <p className="text-[13px] text-[var(--muted)]">
-            Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in your deployment environment variables,
-            then redeploy. Build now succeeds even before these values are configured.
+            Add <code className="text-[var(--accent)]">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
+            <code className="text-[var(--accent)]">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to this Railway service&apos;s
+            variables, save, then refresh this page (a full redeploy is not required).
           </p>
         </div>
       </div>
@@ -108,6 +137,7 @@ export default function Home() {
         members={members}
         alertCount={alertCount}
         maintenanceCount={maintenanceCount}
+        householdLabel={householdLabel}
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
