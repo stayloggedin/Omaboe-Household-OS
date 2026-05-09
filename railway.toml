@@ -1,11 +1,11 @@
-# Railway deploy config — https://docs.railway.com/reference/config-as-code
-# Root = directory that contains package.json.
+# Railway deploy config - https://docs.railway.com/reference/config-as-code
+# Root directory must contain package.json.
 
 [build]
 builder = "nixpacks"
 
 [deploy]
-# Next.js ignores Railway’s PORT unless you pass -p explicitly.
+# Next.js needs explicit -p so it listens on Railway PORT.
 startCommand = "npx next start -H 0.0.0.0 -p $PORT"
 healthcheckPath = "/"
 healthcheckTimeout = 300
