@@ -48,7 +48,6 @@ vercel --prod
 2. Share with all household members — they can open it on any device
 3. Everyone sees the same data, updated live
 
-<<<<<<< HEAD
 ### Optional — Auto-deploy with GitHub Actions
 
 If you want every push to `main` to deploy automatically, this repo includes:
@@ -73,8 +72,19 @@ Once secrets are set, push to `main` (or run the workflow manually from the Acti
 
 PRs to `main` also run `npm ci`, `npm run lint`, `npm run typecheck`, and `npm run build` automatically, so issues are caught before merge.
 
-=======
->>>>>>> 16218207cc942180a28cf33831a9daa74a206f28
+### Railway
+
+This repo includes `railway.toml` so Next.js listens on Railway’s **`PORT`** (deploys fail if the app stays on port 3000 only).
+
+1. In [Railway](https://railway.app), **New Project** → deploy from GitHub (same repo root as `package.json`).
+2. **Variables** → add the same Supabase/public keys as above:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_HOUSEHOLD_NAME` (optional)
+3. Deploy. Build command should be **`npm run build`** (auto); start uses `railway.toml` → `npx next start -H 0.0.0.0 -p $PORT`.
+
+If a build still fails, open **Deployments → View logs** and check the **Build** phase (TypeScript/eslint) vs **Deploy** phase (crash on boot).
+
 ---
 
 ## 🗂 Project structure
@@ -96,6 +106,7 @@ household-os/
 │       └── supabase.ts      # Supabase client + types
 ├── supabase-schema.sql      # ← Run this in Supabase SQL editor
 ├── .env.local.example       # ← Copy to .env.local, fill in keys
+├── railway.toml             # Railway: PORT + host for next start
 └── vercel.json              # Vercel config
 ```
 
